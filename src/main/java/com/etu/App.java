@@ -8,7 +8,31 @@ import java.io.*;
 public class App {
 
     public static void main(String[] args) {
-        init();
+        Model model = read("vc-db-1.rdf", null);
+
+        Resource johnSmith = model.getResource("http://somewhere/JohnSmith/");
+
+        Selector selector = queryModel(model, johnSmith, null, (RDFNode) null, true);
+    }
+
+    private static Selector queryModel(Model model, Resource subject, Property predicate, RDFNode object, boolean showResults) {
+        Selector selector = new SimpleSelector(subject, predicate, object);
+
+        if(showResults) {
+            StmtIterator iter = model.listStatements(selector);
+            if (iter.hasNext()) {
+                // System.out.println("The database contains vcards for:");
+                while (iter.hasNext()) {
+
+                    Statement statement = iter.nextStatement();
+                    System.out.println("  " + statement.getSubject().toString() + " --- " + statement.getPredicate().toString() + " ---> " + statement.getObject().toString());
+                }
+            } else {
+                System.out.println("No Smith's were found in the database");
+            }
+        }
+
+        return selector;
     }
 
     private static Model read(String inputFileName, String format) {
