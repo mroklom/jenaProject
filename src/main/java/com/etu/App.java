@@ -2,6 +2,7 @@ package com.etu;
 
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.util.FileManager;
+import org.apache.jena.query.*;
 
 import java.io.*;
 
@@ -13,6 +14,24 @@ public class App {
         Resource johnSmith = model.getResource("http://somewhere/JohnSmith/");
 
         Selector selector = queryModel(model, johnSmith, null, (RDFNode) null, true);
+        String queryString =
+                "SELECT ?a ?b ?c " +
+                "WHERE { " +
+                    "?a ?b ?c" +
+                "}";
+
+        execSparqlQuery(model, queryString);
+    }
+
+    private static void execSparqlQuery (Model model, String queryString){
+        Query query = QueryFactory.create(queryString);
+        QueryExecution exec = QueryExecutionFactory.create(query, model);
+        try {
+            ResultSet resultSet = exec.execSelect();
+            ResultSetFormatter.out(System.out, resultSet, query) ;
+        } finally {
+            exec.close();
+        }
     }
 
     private static Selector queryModel(Model model, Resource subject, Property predicate, RDFNode object, boolean showResults) {
