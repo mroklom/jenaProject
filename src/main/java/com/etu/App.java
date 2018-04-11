@@ -3,6 +3,7 @@ package com.etu;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.util.FileManager;
 import org.apache.jena.query.*;
+import org.apache.jena.vocabulary.VCARD;
 
 import java.io.*;
 
@@ -20,7 +21,12 @@ public class App {
                     "?a ?b ?c" +
                 "}";
 
-        execSparqlQuery(model, queryString);
+        Model model2 = ModelFactory.createDefaultModel();
+        model2.createResource("http://somewhere/AntoineChedin").addProperty(VCARD.FN, "Antoine Chedin");
+
+        execSparqlQuery(model2, queryString);
+        execSparqlQuery(model.union(model2), queryString);
+
     }
 
     private static void execSparqlQuery (Model model, String queryString){
