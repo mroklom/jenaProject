@@ -21,11 +21,14 @@ public class App {
                     "?a ?b ?c" +
                 "}";
 
-        Model model2 = ModelFactory.createDefaultModel();
-        model2.createResource("http://somewhere/AntoineChedin").addProperty(VCARD.FN, "Antoine Chedin");
+        model.createResource("http://somewhere/AntoineChedin").addProperty(VCARD.FN, "Antoine Chedin");
+        execSparqlQuery(model, queryString);
 
-        execSparqlQuery(model2, queryString);
-        execSparqlQuery(model.union(model2), queryString);
+        Model diff = ModelFactory.createDefaultModel();
+        diff.createResource("http://somewhere/AntoineChedin").addProperty(VCARD.FN, "Antoine Chedin");
+        model = model.difference(diff);
+
+        execSparqlQuery(model, queryString);
 
     }
 
