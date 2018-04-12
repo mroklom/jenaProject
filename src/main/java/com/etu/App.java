@@ -1,6 +1,7 @@
 package com.etu;
 
 import org.apache.jena.rdf.model.*;
+import org.apache.jena.sparql.vocabulary.FOAF;
 import org.apache.jena.util.FileManager;
 import org.apache.jena.query.*;
 import org.apache.jena.vocabulary.VCARD;
@@ -10,25 +11,46 @@ import java.io.*;
 public class App {
 
     public static void main(String[] args) {
-        Model model = read("vc-db-1.rdf", null);
 
-        Resource johnSmith = model.getResource("http://somewhere/JohnSmith/");
+        init();
 
-        Selector selector = queryModel(model, johnSmith, null, (RDFNode) null, true);
+        Model model = read("etu.rdf", "RDF/XML");
+
         String queryString =
-                "SELECT ?a ?b ?c " +
-                "WHERE { " +
-                    "?a ?b ?c" +
-                "}";
-
-        model.createResource("http://somewhere/AntoineChedin").addProperty(VCARD.FN, "Antoine Chedin");
-        execSparqlQuery(model, queryString);
-
-        Model diff = ModelFactory.createDefaultModel();
-        diff.createResource("http://somewhere/AntoineChedin").addProperty(VCARD.FN, "Antoine Chedin");
-        model = model.difference(diff);
+                "SELECT ?sujet ?prédicat ?objet " +
+                        "WHERE { " +
+                        "?sujet ?prédicat ?objet" +
+                        "}";
 
         execSparqlQuery(model, queryString);
+
+        Resource valentin = model.getResource("http://etu.test/MaréchalValentin");
+        System.out.println("On retire la propriété NINCKNAME de valentin");
+        valentin.removeAll(VCARD.NICKNAME);
+
+        execSparqlQuery(model, queryString);
+
+        System.out.println("On rajoute Mickey au jeu de données");
+        Resource mickey = model.createResource("http://etu.test/MickeyMouse")
+                .addProperty(VCARD.N, "Mickey")
+                .addProperty(VCARD.FN, "Mouse")
+                .addProperty(VCARD.ORG, "Dsiney");
+
+        execSparqlQuery(model, queryString);
+
+        System.out.println("On change l'addresse email de Valentin");
+        valentin.removeAll(VCARD.EMAIL);
+        valentin.addProperty(VCARD.EMAIL, "valentin.marechal@etu.univ-tours.fr");
+
+        execSparqlQuery(model, queryString);
+
+        System.out.println("On supprime valentin du jeu de données en supprimant toutes ses proprietés");
+        valentin.removeProperties();
+
+        execSparqlQuery(model, queryString);
+
+        save(model, "etu_update_turtle.rdf", "TURTLE");
+        save(model, "etu_update_rdfxml.rdf", "RDF/XML");
 
     }
 
@@ -43,7 +65,7 @@ public class App {
         }
     }
 
-    private static Selector queryModel(Model model, Resource subject, Property predicate, RDFNode object, boolean showResults) {
+    /*private static Selector queryModel(Model model, Resource subject, Property predicate, RDFNode object, boolean showResults) {
         Selector selector = new SimpleSelector(subject, predicate, object);
 
         if(showResults) {
@@ -61,7 +83,7 @@ public class App {
         }
 
         return selector;
-    }
+    }*/
 
     private static Model read(String inputFileName, String format) {
 
@@ -88,36 +110,28 @@ public class App {
     }
 
     private static void init() {
-        Model catModel = ModelFactory.createDefaultModel();
+        Model model = ModelFactory.createDefaultModel();
 
-        Resource catOne = catModel.createResource("http://miou/catOne");
-        Resource catTwo = catModel.createResource("http://miou/catTwo");
-        Resource catThree = catModel.createResource("http://miou/catThree");
+        Resource resource1 = model.createResource("http://etu.test/JohannaChapman");
+        Resource resource2 = model.createResource("http://etu.test/MaréchalValentin");
+        Resource resource3 = model.createResource("http://etu.test/ChédinAntoine");
 
-        Property hasCatFriend = catModel.createProperty("hasCatFriend");
-        Property isCatGender = catModel.createProperty("isCatGender");
-        Property hasName = catModel.createProperty("hasName");
+        resource1
+                .addProperty(VCARD.FN, "Johanna")
+                .addProperty(VCARD.N, "Chapman")
+                .addProperty(VCARD.NICKNAME, "Jojo");
 
-        catOne
-                .addProperty(hasCatFriend, catTwo)
-                .addProperty(hasCatFriend, catThree)
-                .addProperty(isCatGender, "Female Cat")
-                .addProperty(hasName, "Johanna meow");
+        resource2
+                .addProperty(VCARD.FN, "Valentin")
+                .addProperty(VCARD.N, "Maréchal")
+                .addProperty(VCARD.NICKNAME, "Val")
+                .addProperty(VCARD.EMAIL, "marechal.valentin@etu.univ-tours.fr");
 
-        catTwo
-                .addProperty(hasCatFriend, catOne)
-                .addProperty(hasCatFriend, catThree)
-                .addProperty(isCatGender, "Male Cat")
-                .addProperty(hasName, "Valentin meow");
-
-        catThree
-                .addProperty(hasCatFriend, catOne)
-                .addProperty(hasCatFriend, catTwo)
-                .addProperty(isCatGender, "Male Cat")
-                .addProperty(hasName, "Antoine meow");
+        resource3
+                .addProperty(VCARD.FN, "Antoine")
+                .addProperty(VCARD.N, "Chédin");
 
 
-
-        save(catModel, "cat.rdf", "N-TRIPLES");
+        save(model, "etu.rdf", "RDF/XML");
     }
 }
